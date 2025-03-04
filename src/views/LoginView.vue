@@ -6,23 +6,31 @@
       <input v-model="password" type="password" placeholder="Senha" required />
       <button type="submit">Entrar</button>
     </form>
+    <p v-if="message" class="message">{{ message }}</p>
   </div>
 </template>
 
 <script>
+import api from "../api";
+
 export default {
   data() {
-    return { email: "", password: "" };
+    return { email: "", password: "", message: "" };
   },
   methods: {
     async login() {
-      const response = await fetch("http://localhost:4000/auth/sign_in", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: this.email, password: this.password }),
-      });
-      const data = await response.json();
-      console.log("Login:", data);
+      try {
+        const response = await api.post("/auth/sign_in", {
+          email: this.email,
+          password: this.password,
+        });
+
+        console.log("Login bem-sucedido!", response.data);
+        this.message = "Login realizado com sucesso!";
+      } catch (error) {
+        console.error("Erro no login", error.response);
+        this.message = "Erro ao fazer login. Verifique suas credenciais.";
+      }
     },
   },
 };
