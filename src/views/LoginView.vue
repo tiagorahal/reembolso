@@ -12,6 +12,7 @@
 
 <script>
 import api from "../api";
+import Cookies from "js-cookie";
 import { useRouter } from "vue-router";
 
 export default {
@@ -20,6 +21,7 @@ export default {
   },
   setup() {
     const router = useRouter();
+
     return { router };
   },
   methods: {
@@ -31,16 +33,19 @@ export default {
         });
 
         console.log("Login bem-sucedido!", response.data);
-        this.message = "Login realizado com sucesso! Redirecionando...";
+        this.message = "Login realizado com sucesso!";
 
-        setTimeout(() => {
-          this.router.push("/reembolsos");
-        }, 1000);
+        Cookies.set("access-token", response.headers["access-token"]);
+        Cookies.set("client", response.headers["client"]);
+        Cookies.set("uid", response.headers["uid"]);
+
+        window.location.href = "/reembolsos";
       } catch (error) {
         console.error("Erro no login", error.response);
         this.message = "Erro ao fazer login. Verifique suas credenciais.";
       }
     },
   },
+
 };
 </script>

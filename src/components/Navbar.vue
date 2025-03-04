@@ -5,42 +5,35 @@
       <li v-if="!isLoggedIn"><router-link to="/login">Login</router-link></li>
       <li v-if="!isLoggedIn"><router-link to="/signup">Cadastro</router-link></li>
       <li v-if="isLoggedIn"><router-link to="/reembolsos">Reembolsos</router-link></li>
-      <li v-if="isLoggedIn"><button @click="logout">Sair</button></li>
+      <li v-if="isLoggedIn"><button @click="logout">Logout</button></li>
     </ul>
   </nav>
 </template>
 
 <script>
 import Cookies from "js-cookie";
-import { ref, onMounted, watchEffect } from "vue";
+import { ref, watchEffect } from "vue";
 import { useRouter } from "vue-router";
 
 export default {
   setup() {
-    const isLoggedIn = ref(false);
+    const isLoggedIn = ref(!!Cookies.get("access-token"));
     const router = useRouter();
 
-    const checkLoginStatus = () => {
-      const token = Cookies.get("access-token");
-      const client = Cookies.get("client");
-      const uid = Cookies.get("uid");
-
-      isLoggedIn.value = !!(token && client && uid);
-    };
+    watchEffect(() => {
+      isLoggedIn.value = !!Cookies.get("access-token");
+    });
 
     const logout = () => {
       Cookies.remove("access-token");
       Cookies.remove("client");
       Cookies.remove("uid");
       isLoggedIn.value = false;
-      router.push("/");
+      router.push("/login");
     };
 
-    onMounted(checkLoginStatus);
-    watchEffect(checkLoginStatus);
-
     return { isLoggedIn, logout };
-  },
+  }
 };
 </script>
 
