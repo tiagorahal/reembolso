@@ -1,7 +1,6 @@
 <template>
   <div>
     <h1>Reembolsos</h1>
-    <button @click="getReembolsos">Carregar Reembolsos</button>
 
     <h2>Adicionar Reembolso</h2>
     <form @submit.prevent="createReembolso">
@@ -20,49 +19,64 @@
 </template>
 
 <script>
+import { onMounted, ref } from "vue";
 import api from "../api";
 
 export default {
-  data() {
-    return {
-      reembolsos: [],
-      descricao: "",
-      valor: "",
-      data: "",
-    };
-  },
-  methods: {
-    async getReembolsos() {
+  setup() {
+    const reembolsos = ref([]);
+    const descricao = ref("");
+    const valor = ref("");
+    const data = ref("");
+
+    const getReembolsos = async () => {
       try {
         const response = await api.get("/reembolsos");
-        this.reembolsos = response.data;
+        
+        reembolsos.value = response.data.sort((a, b) => new Date(a.data) - new Date(b.data));
       } catch (error) {
         console.error("Erro ao buscar reembolsos", error);
       }
-    },
-    async createReembolso() {
+    };
+
+    const createReembolso = async () => {
       try {
         const response = await api.post("/reembolsos", {
           reembolso: {
-            descricao: this.descricao,
-            valor: parseFloat(this.valor),
-            data: this.data,
+            descricao: descricao.value,
+            valor: parseFloat(valor.value),
+            data: data.value,
           },
         });
 
         console.log("Reembolso criado:", response.data);
 
-        // Add new reembolso to the list
-        this.reembolsos.push(response.data);
+        let index = reembolsos.value.findIndex(r => new Date(r.data) > new Date(response.data.data));
+        if (index === -1) {
+          reembolsos.value.push(response.data);
+        } else {
+          reembolsos.value.splice(index, 0, response.data);
+        }
 
         // Reset form
-        this.descricao = "";
-        this.valor = "";
-        this.data = "";
+        descricao.value = "";
+        valor.value = "";
+        data.value = "";
       } catch (error) {
         console.error("Erro ao criar reembolso", error);
       }
-    },
+    };
+
+    onMounted(getReembolsos);
+
+    return {
+      reembolsos,
+      descricao,
+      valor,
+      data,
+      getReembolsos,
+      createReembolso,
+    };
   },
 };
 </script>
