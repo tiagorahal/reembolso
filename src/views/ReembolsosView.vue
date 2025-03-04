@@ -1,30 +1,7 @@
-<script setup>
-import { ref, onMounted } from "vue";
-import api from "../api";
-
-const reembolsos = ref([]);
-
-const fetchReembolsos = async () => {
-  try {
-    const res = await api.get("/reembolsos", {
-      headers: {
-        "access-token": localStorage.getItem("token"),
-        "client": localStorage.getItem("client"),
-        "uid": localStorage.getItem("uid"),
-      },
-    });
-    reembolsos.value = res.data;
-  } catch (error) {
-    console.error("Erro ao buscar reembolsos", error);
-  }
-};
-
-onMounted(fetchReembolsos);
-</script>
-
 <template>
   <div>
-    <h2>Lista de Reembolsos</h2>
+    <h1>Reembolsos</h1>
+    <button @click="getReembolsos">Carregar Reembolsos</button>
     <ul>
       <li v-for="reembolso in reembolsos" :key="reembolso.id">
         {{ reembolso.descricao }} - R$ {{ reembolso.valor }}
@@ -33,14 +10,19 @@ onMounted(fetchReembolsos);
   </div>
 </template>
 
-<style scoped>
-ul {
-  list-style: none;
-  padding: 0;
-}
-li {
-  background: #eee;
-  margin: 5px 0;
-  padding: 10px;
-}
-</style>
+<script>
+export default {
+  data() {
+    return { reembolsos: [] };
+  },
+  methods: {
+    async getReembolsos() {
+      const response = await fetch("http://localhost:4000/reembolsos", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+      this.reembolsos = await response.json();
+    },
+  },
+};
+</script>

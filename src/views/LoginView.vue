@@ -1,44 +1,29 @@
-<script setup>
-import { ref } from "vue";
-import api from "../api";
-
-const email = ref("");
-const password = ref("");
-const loginError = ref("");
-
-const login = async () => {
-  try {
-    const res = await api.post("/auth/sign_in", {
-      email: email.value,
-      password: password.value,
-    });
-    localStorage.setItem("token", res.headers["access-token"]);
-    localStorage.setItem("client", res.headers["client"]);
-    localStorage.setItem("uid", res.headers["uid"]);
-    window.location.href = "/reembolsos";
-  } catch (error) {
-    loginError.value = "Credenciais inválidas";
-  }
-};
-</script>
-
 <template>
   <div>
-    <h2>Login</h2>
-    <input v-model="email" type="email" placeholder="Email" />
-    <input v-model="password" type="password" placeholder="Senha" />
-    <button @click="login">Entrar</button>
-    <p v-if="loginError" class="error">{{ loginError }}</p>
+    <h1>Login</h1>
+    <form @submit.prevent="login">
+      <input v-model="email" placeholder="Email" required />
+      <input v-model="password" type="password" placeholder="Senha" required />
+      <button type="submit">Entrar</button>
+    </form>
   </div>
 </template>
 
-<style scoped>
-input, button {
-  display: block;
-  margin: 10px 0;
-  padding: 10px;
-}
-.error {
-  color: red;
-}
-</style>
+<script>
+export default {
+  data() {
+    return { email: "", password: "" };
+  },
+  methods: {
+    async login() {
+      const response = await fetch("http://localhost:4000/auth/sign_in", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: this.email, password: this.password }),
+      });
+      const data = await response.json();
+      console.log("Login:", data);
+    },
+  },
+};
+</script>
