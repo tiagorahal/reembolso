@@ -2,33 +2,44 @@
   <nav>
     <ul>
       <li><router-link to="/">Home</router-link></li>
-      <li><router-link to="/login">Login</router-link></li>
-      <li><router-link to="/signup">Cadastro</router-link></li>
-      <li><router-link to="/reembolsos">Reembolsos</router-link></li>
-      <li v-if="isLoggedIn"><a @click="logout" href="#">Sair</a></li>
+      <li v-if="!isLoggedIn"><router-link to="/login">Login</router-link></li>
+      <li v-if="!isLoggedIn"><router-link to="/signup">Cadastro</router-link></li>
+      <li v-if="isLoggedIn"><router-link to="/reembolsos">Reembolsos</router-link></li>
+      <li v-if="isLoggedIn"><button @click="logout">Sair</button></li>
     </ul>
   </nav>
 </template>
 
 <script>
-import api from "../api";
+import Cookies from "js-cookie";
+import { ref, onMounted, watchEffect } from "vue";
+import { useRouter } from "vue-router";
 
 export default {
-  computed: {
-    isLoggedIn() {
-      return localStorage.getItem("access-token") !== null;
-    },
-  },
-  methods: {
-    async logout() {
-      try {
-        await api.delete("/auth/sign_out");
-        localStorage.clear();
-        window.location.reload();
-      } catch (error) {
-        console.error("Erro ao fazer logout", error);
-      }
-    },
+  setup() {
+    const isLoggedIn = ref(false);
+    const router = useRouter();
+
+    const checkLoginStatus = () => {
+      const token = Cookies.get("access-token");
+      const client = Cookies.get("client");
+      const uid = Cookies.get("uid");
+
+      isLoggedIn.value = !!(token && client && uid);
+    };
+
+    const logout = () => {
+      Cookies.remove("access-token");
+      Cookies.remove("client");
+      Cookies.remove("uid");
+      isLoggedIn.value = false;
+      router.push("/");
+    };
+
+    onMounted(checkLoginStatus);
+    watchEffect(checkLoginStatus);
+
+    return { isLoggedIn, logout };
   },
 };
 </script>
@@ -43,9 +54,14 @@ ul {
   list-style: none;
   gap: 1rem;
 }
-a {
+a, button {
   color: white;
   text-decoration: none;
+  background: none;
+  border: none;
   cursor: pointer;
+}
+button:hover {
+  text-decoration: underline;
 }
 </style>

@@ -12,10 +12,15 @@
 
 <script>
 import api from "../api";
+import { useRouter } from "vue-router";
 
 export default {
   data() {
     return { email: "", password: "", message: "" };
+  },
+  setup() {
+    const router = useRouter();
+    return { router };
   },
   methods: {
     async login() {
@@ -26,7 +31,11 @@ export default {
         });
 
         console.log("Login bem-sucedido!", response.data);
-        this.message = "Login realizado com sucesso!";
+        this.message = "Login realizado com sucesso! Redirecionando...";
+
+        setTimeout(() => {
+          this.router.push("/reembolsos");
+        }, 1000);
       } catch (error) {
         console.error("Erro no login", error.response);
         this.message = "Erro ao fazer login. Verifique suas credenciais.";
