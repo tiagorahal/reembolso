@@ -25,6 +25,8 @@ export default {
     });
 
     const logout = () => {
+      if (!window.confirm("Tem certeza que deseja sair?")) return;
+
       Cookies.remove("access-token");
       Cookies.remove("client");
       Cookies.remove("uid");

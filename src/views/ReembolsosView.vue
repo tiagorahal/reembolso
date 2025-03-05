@@ -5,12 +5,7 @@
     <h2>Adicionar Reembolso</h2>
     <form @submit.prevent="createReembolso">
       <input v-model="descricao" placeholder="Descrição" required />
-      <input 
-        v-model="valor" 
-        placeholder="Valor (ex: 10,50 ou 10.50)" 
-        @input="formatValor" 
-        required 
-      />
+      <input v-model="valor" type="text" placeholder="Valor" @input="formatValue" required />
       <input v-model="data" type="date" :max="today" required />
       <button type="submit">Criar Reembolso</button>
     </form>
@@ -18,6 +13,7 @@
     <ul>
       <li v-for="reembolso in reembolsos" :key="reembolso.id">
         {{ reembolso.descricao }} - R$ {{ formatCurrency(reembolso.valor) }} ({{ formatDate(reembolso.data) }})
+        <button @click="deleteReembolso(reembolso.id)" class="delete-btn">❌</button>
       </li>
     </ul>
   </div>
@@ -26,6 +22,7 @@
 <script>
 import { onMounted, ref } from "vue";
 import api from "../api";
+import Swal from "sweetalert2";
 
 export default {
   setup() {
@@ -42,16 +39,7 @@ export default {
     };
 
     const formatCurrency = (value) => {
-      return parseFloat(value).toLocaleString("pt-BR", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      });
-    };
-
-    const formatValor = () => {
-      valor.value = valor.value
-        .replace(/[^0-9,\.]/g, "")
-        .replace(",", ".");
+      return parseFloat(value).toFixed(2).replace(".", ",");
     };
 
     const getReembolsos = async () => {
@@ -76,7 +64,7 @@ export default {
         const response = await api.post("/reembolsos", {
           reembolso: {
             descricao: descricao.value,
-            valor: parseFloat(valor.value),
+            valor: parseFloat(valor.value.replace(",", ".")),
             data: data.value,
           },
         });
@@ -98,6 +86,23 @@ export default {
       }
     };
 
+    const deleteReembolso = async (id) => {
+      if (!window.confirm("Tem certeza que deseja excluir este reembolso?")) return;
+
+      try {
+        await api.delete(`/reembolsos/${id}`);
+        reembolsos.value = reembolsos.value.filter(reembolso => reembolso.id !== id);
+        console.log("Reembolso deletado com sucesso.");
+      } catch (error) {
+        console.error("Erro ao deletar reembolso", error);
+      }
+    };
+
+
+    const formatValue = () => {
+      valor.value = valor.value.replace(/[^0-9,]/g, "");
+    };
+
     onMounted(getReembolsos);
 
     return {
@@ -108,10 +113,26 @@ export default {
       today,
       getReembolsos,
       createReembolso,
+      deleteReembolso,
       formatDate,
       formatCurrency,
-      formatValor,
+      formatValue,
     };
   },
 };
 </script>
+
+<style>
+.delete-btn {
+  margin-left: 10px;
+  color: red;
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-size: 1.2em;
+}
+
+.delete-btn:hover {
+  color: darkred;
+}
+</style>
