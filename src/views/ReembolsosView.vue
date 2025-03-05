@@ -128,37 +128,43 @@ export default {
     };
 
     const createReembolso = async () => {
-      if (new Date(data.value) > new Date()) {
-        alert("Não é possível criar um reembolso para uma data futura!");
-        return;
-      }
+  if (new Date(data.value) > new Date()) {
+    alert("Não é possível criar um reembolso para uma data futura!");
+    return;
+  }
 
-      const tagsArray = tagsInput.value
-        .split(",")
-        .map(tag => tag.trim())
-        .filter(tag => tag.length > 0);
+  const tagsArray = tagsInput.value
+    .split(",")
+    .map(tag => tag.trim())
+    .filter(tag => tag.length > 0);
 
-      try {
-        const response = await api.post("/reembolsos", {
-          reembolso: {
-            descricao: descricao.value,
-            valor: parseFloat(valor.value),
-            data: data.value,
-            tag_ids: tagsArray,
-          },
-        });
+  try {
+    const response = await api.post("/reembolsos", {
+      reembolso: {
+        descricao: descricao.value,
+        valor: parseFloat(valor.value),
+        data: data.value,
+        tag_ids: tagsArray,
+      },
+    });
 
-        reembolsos.value.push(response.data);
-        reembolsos.value.sort((a, b) => new Date(a.data) - new Date(b.data));
-
-        descricao.value = "";
-        valor.value = "";
-        data.value = "";
-        tagsInput.value = "";
-      } catch (error) {
-        console.error("Erro ao criar reembolso", error);
-      }
+    const newReembolso = {
+      ...response.data,
+      tags: tagsArray.map(tag => ({ id: tag, nome: tag }))
     };
+
+    reembolsos.value.push(newReembolso);
+    reembolsos.value.sort((a, b) => new Date(a.data) - new Date(b.data));
+
+    descricao.value = "";
+    valor.value = "";
+    data.value = "";
+    tagsInput.value = "";
+  } catch (error) {
+    console.error("Erro ao criar reembolso", error);
+  }
+};
+
 
     const openEditModal = (reembolso) => {
       editReembolso.value = { 
