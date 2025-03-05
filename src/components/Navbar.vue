@@ -1,12 +1,25 @@
 <template>
-  <nav>
-    <ul>
-      <li><router-link to="/">Home</router-link></li>
-      <li v-if="!isLoggedIn"><router-link to="/login">Login</router-link></li>
-      <li v-if="!isLoggedIn"><router-link to="/signup">Cadastro</router-link></li>
-      <li v-if="isLoggedIn"><router-link to="/reembolsos">Reembolsos</router-link></li>
-      <li v-if="isLoggedIn"><button @click="logout">Logout</button></li>
-    </ul>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <router-link class="navbar-brand" to="/">Home</router-link>
+
+      <div class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item" v-if="!isLoggedIn">
+            <router-link class="nav-link" to="/login">Login</router-link>
+          </li>
+          <li class="nav-item" v-if="!isLoggedIn">
+            <router-link class="nav-link" to="/signup">Cadastro</router-link>
+          </li>
+          <li class="nav-item" v-if="isLoggedIn">
+            <router-link class="nav-link" to="/reembolsos">Reembolsos</router-link>
+          </li>
+          <li class="nav-item" v-if="isLoggedIn">
+            <button class="btn btn-outline-light ms-2" @click="logout">Logout</button>
+          </li>
+        </ul>
+      </div>
+    </div>
   </nav>
 </template>
 
@@ -25,8 +38,7 @@ export default {
     });
 
     const logout = () => {
-      if (!window.confirm("Tem certeza que deseja sair?")) return;
-
+      if (!window.confirm("Reembolso: Tem certeza que deseja sair?")) return;
       Cookies.remove("access-token");
       Cookies.remove("client");
       Cookies.remove("uid");
@@ -38,25 +50,3 @@ export default {
   }
 };
 </script>
-
-<style scoped>
-nav {
-  background: #333;
-  padding: 1rem;
-}
-ul {
-  display: flex;
-  list-style: none;
-  gap: 1rem;
-}
-a, button {
-  color: white;
-  text-decoration: none;
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-button:hover {
-  text-decoration: underline;
-}
-</style>

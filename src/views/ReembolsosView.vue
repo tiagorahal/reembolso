@@ -1,19 +1,27 @@
 <template>
-  <div>
-    <h1>Reembolsos</h1>
+  <div class="container mt-4">
+    <h1 class="text-center">Reembolsos</h1>
 
-    <h2>Adicionar Reembolso</h2>
-    <form @submit.prevent="createReembolso">
-      <input v-model="descricao" placeholder="Descrição" required />
-      <input v-model="valor" type="text" placeholder="Valor" @input="formatValue" required />
-      <input v-model="data" type="date" :max="today" required />
-      <button type="submit">Criar Reembolso</button>
+    <h2 class="mt-4">Adicionar Reembolso</h2>
+    <form @submit.prevent="createReembolso" class="row g-3">
+      <div class="col-md-4">
+        <input v-model="descricao" class="form-control" placeholder="Descrição" required />
+      </div>
+      <div class="col-md-2">
+        <input v-model="valor" class="form-control" placeholder="Valor" required />
+      </div>
+      <div class="col-md-3">
+        <input v-model="data" class="form-control" type="date" :max="today" required />
+      </div>
+      <div class="col-md-3">
+        <button class="btn btn-success w-100" type="submit">Criar Reembolso</button>
+      </div>
     </form>
 
-    <ul>
-      <li v-for="reembolso in reembolsos" :key="reembolso.id">
-        {{ reembolso.descricao }} - R$ {{ formatCurrency(reembolso.valor) }} ({{ formatDate(reembolso.data) }})
-        <button @click="deleteReembolso(reembolso.id)" class="delete-btn">❌</button>
+    <ul class="list-group mt-4">
+      <li class="list-group-item d-flex justify-content-between align-items-center" v-for="reembolso in reembolsos" :key="reembolso.id">
+        <span>{{ reembolso.descricao }} - <strong>R$ {{ reembolso.valor }}</strong> ({{ formatDate(reembolso.data) }})</span>
+        <button class="btn btn-danger btn-sm" @click="deleteReembolso(reembolso.id)">❌</button>
       </li>
     </ul>
   </div>
@@ -22,7 +30,6 @@
 <script>
 import { onMounted, ref } from "vue";
 import api from "../api";
-import Swal from "sweetalert2";
 
 export default {
   setup() {
@@ -36,10 +43,6 @@ export default {
       const date = new Date(dateString);
       if (isNaN(date)) return dateString;
       return date.toLocaleDateString("pt-BR");
-    };
-
-    const formatCurrency = (value) => {
-      return parseFloat(value).toFixed(2).replace(".", ",");
     };
 
     const getReembolsos = async () => {
@@ -64,7 +67,7 @@ export default {
         const response = await api.post("/reembolsos", {
           reembolso: {
             descricao: descricao.value,
-            valor: parseFloat(valor.value.replace(",", ".")),
+            valor: parseFloat(valor.value),
             data: data.value,
           },
         });
@@ -87,7 +90,7 @@ export default {
     };
 
     const deleteReembolso = async (id) => {
-      if (!window.confirm("Tem certeza que deseja excluir este reembolso?")) return;
+      if (!window.confirm("Reembolso: Tem certeza que deseja excluir este reembolso?")) return;
 
       try {
         await api.delete(`/reembolsos/${id}`);
@@ -96,11 +99,6 @@ export default {
       } catch (error) {
         console.error("Erro ao deletar reembolso", error);
       }
-    };
-
-
-    const formatValue = () => {
-      valor.value = valor.value.replace(/[^0-9,]/g, "");
     };
 
     onMounted(getReembolsos);
@@ -113,26 +111,9 @@ export default {
       today,
       getReembolsos,
       createReembolso,
-      deleteReembolso,
       formatDate,
-      formatCurrency,
-      formatValue,
+      deleteReembolso,
     };
   },
 };
 </script>
-
-<style>
-.delete-btn {
-  margin-left: 10px;
-  color: red;
-  cursor: pointer;
-  border: none;
-  background: none;
-  font-size: 1.2em;
-}
-
-.delete-btn:hover {
-  color: darkred;
-}
-</style>

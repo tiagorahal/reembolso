@@ -1,14 +1,23 @@
 <template>
-  <div>
-    <h1>Login</h1>
-    <form @submit.prevent="login">
-      <input v-model="email" placeholder="Email" required />
-      <p v-if="showEmailError" class="error">{{ emailError }}</p>
+  <div class="container d-flex justify-content-center align-items-center vh-100">
+    <div class="card shadow p-4" style="width: 350px;">
+      <h2 class="text-center">Login</h2>
+      <form @submit.prevent="login">
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input v-model="email" @blur="validateEmail" type="email" class="form-control" placeholder="Digite seu email" required />
+          <p v-if="showEmailError" class="text-danger small">{{ emailError }}</p>
+        </div>
 
-      <input v-model="password" type="password" placeholder="Senha" required />
-      <button type="submit">Entrar</button>
-    </form>
-    <p v-if="message" class="message">{{ message }}</p>
+        <div class="mb-3">
+          <label class="form-label">Senha</label>
+          <input v-model="password" type="password" class="form-control" placeholder="Digite sua senha" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Entrar</button>
+      </form>
+      <p v-if="message" class="mt-3 text-center text-danger">{{ message }}</p>
+    </div>
   </div>
 </template>
 
@@ -63,10 +72,3 @@ export default {
   },
 };
 </script>
-
-<style>
-.error {
-  color: red;
-  font-size: 0.9em;
-}
-</style>
