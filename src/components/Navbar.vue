@@ -1,9 +1,10 @@
 <template>
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-      <router-link class="navbar-brand" to="/">Home</router-link>
-
-      <div class="collapse navbar-collapse">
+    <div class="container">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item" v-if="!isLoggedIn">
             <router-link class="nav-link" to="/login">Login</router-link>
@@ -15,7 +16,7 @@
             <router-link class="nav-link" to="/reembolsos">Reembolsos</router-link>
           </li>
           <li class="nav-item" v-if="isLoggedIn">
-            <button class="btn btn-outline-light ms-2" @click="logout">Logout</button>
+            <button class="btn btn-danger" @click="confirmLogout">Logout</button>
           </li>
         </ul>
       </div>
@@ -37,16 +38,17 @@ export default {
       isLoggedIn.value = !!Cookies.get("access-token");
     });
 
-    const logout = () => {
-      if (!window.confirm("Reembolso: Tem certeza que deseja sair?")) return;
-      Cookies.remove("access-token");
-      Cookies.remove("client");
-      Cookies.remove("uid");
-      isLoggedIn.value = false;
-      router.push("/login");
+    const confirmLogout = () => {
+      if (confirm("Reembolsos: Tem certeza que deseja sair?")) {
+        Cookies.remove("access-token");
+        Cookies.remove("client");
+        Cookies.remove("uid");
+        isLoggedIn.value = false;
+        router.push("/login");
+      }
     };
 
-    return { isLoggedIn, logout };
-  }
+    return { isLoggedIn, confirmLogout };
+  },
 };
 </script>

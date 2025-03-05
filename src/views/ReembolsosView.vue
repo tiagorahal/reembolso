@@ -8,7 +8,14 @@
         <input v-model="descricao" class="form-control" placeholder="Descrição" required />
       </div>
       <div class="col-md-2">
-        <input v-model="valor" class="form-control" placeholder="Valor" required />
+        <input 
+          v-model="valor" 
+          class="form-control" 
+          placeholder="Valor" 
+          required 
+          pattern="^\d+([.,]\d{1,2})?$" 
+          @input="formatValor"
+        />
       </div>
       <div class="col-md-3">
         <input v-model="data" class="form-control" type="date" :max="today" required />
@@ -19,11 +26,23 @@
     </form>
 
     <ul class="list-group mt-4">
-      <li class="list-group-item d-flex justify-content-between align-items-center" v-for="reembolso in reembolsos" :key="reembolso.id">
-        <span>{{ reembolso.descricao }} - <strong>R$ {{ reembolso.valor }}</strong> ({{ formatDate(reembolso.data) }})</span>
-        <button class="btn btn-danger btn-sm" @click="deleteReembolso(reembolso.id)">❌</button>
+      <li class="list-group-item d-flex justify-content-between align-items-center"
+          v-for="reembolso in reembolsos"
+          :key="reembolso.id">
+
+        <span class="text-truncate flex-grow-1" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          {{ reembolso.descricao }}
+        </span>
+
+        <div class="d-flex align-items-center ms-3" style="white-space: nowrap;">
+          <span class="fw-bold me-3">R$ {{ formatValor(reembolso.valor) }}</span>
+          <span>{{ formatDate(reembolso.data) }}</span>
+        </div>
+
+        <button class="btn btn-danger btn-sm ms-3" @click="deleteReembolso(reembolso.id)">❌</button>
       </li>
     </ul>
+
   </div>
 </template>
 
@@ -45,6 +64,11 @@ export default {
       return date.toLocaleDateString("pt-BR");
     };
 
+    const formatValor = (val) => {
+      const num = parseFloat(val);
+      return isNaN(num) ? "0.00" : num.toFixed(2);
+    };
+
     const getReembolsos = async () => {
       try {
         const response = await api.get("/reembolsos");
@@ -55,31 +79,20 @@ export default {
     };
 
     const createReembolso = async () => {
-      const selectedDate = new Date(data.value);
-      const currentDate = new Date();
-
-      if (selectedDate > currentDate) {
+      if (new Date(data.value) > new Date()) {
         alert("Não é possível criar um reembolso para uma data futura!");
         return;
       }
 
       try {
+        const formattedValue = parseFloat(valor.value.replace(",", ".")).toFixed(2);
+
         const response = await api.post("/reembolsos", {
-          reembolso: {
-            descricao: descricao.value,
-            valor: parseFloat(valor.value),
-            data: data.value,
-          },
+          reembolso: { descricao: descricao.value, valor: formattedValue, data: data.value },
         });
 
-        console.log("Reembolso criado:", response.data);
-
         let index = reembolsos.value.findIndex(r => new Date(r.data) > new Date(response.data.data));
-        if (index === -1) {
-          reembolsos.value.push(response.data);
-        } else {
-          reembolsos.value.splice(index, 0, response.data);
-        }
+        index === -1 ? reembolsos.value.push(response.data) : reembolsos.value.splice(index, 0, response.data);
 
         descricao.value = "";
         valor.value = "";
@@ -90,12 +103,11 @@ export default {
     };
 
     const deleteReembolso = async (id) => {
-      if (!window.confirm("Reembolso: Tem certeza que deseja excluir este reembolso?")) return;
+      if (!window.confirm("Reembolsos: Tem certeza que deseja excluir este reembolso?")) return;
 
       try {
         await api.delete(`/reembolsos/${id}`);
-        reembolsos.value = reembolsos.value.filter(reembolso => reembolso.id !== id);
-        console.log("Reembolso deletado com sucesso.");
+        reembolsos.value = reembolsos.value.filter(r => r.id !== id);
       } catch (error) {
         console.error("Erro ao deletar reembolso", error);
       }
@@ -103,17 +115,7 @@ export default {
 
     onMounted(getReembolsos);
 
-    return {
-      reembolsos,
-      descricao,
-      valor,
-      data,
-      today,
-      getReembolsos,
-      createReembolso,
-      formatDate,
-      deleteReembolso,
-    };
+    return { reembolsos, descricao, valor, data, today, getReembolsos, createReembolso, formatDate, formatValor, deleteReembolso };
   },
 };
 </script>

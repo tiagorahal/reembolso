@@ -28,13 +28,7 @@ import { useRouter } from "vue-router";
 
 export default {
   data() {
-    return { 
-      email: "", 
-      password: "", 
-      message: "", 
-      emailError: "", 
-      showEmailError: false 
-    };
+    return { email: "", password: "", message: "", emailError: "", showEmailError: false };
   },
   setup() {
     const router = useRouter();
@@ -51,13 +45,7 @@ export default {
       if (this.emailError) return;
 
       try {
-        const response = await api.post("/auth/sign_in", {
-          email: this.email,
-          password: this.password,
-        });
-
-        console.log("Login bem-sucedido!", response.data);
-        this.message = "Login realizado com sucesso!";
+        const response = await api.post("/auth/sign_in", { email: this.email, password: this.password });
 
         Cookies.set("access-token", response.headers["access-token"]);
         Cookies.set("client", response.headers["client"]);
@@ -65,7 +53,6 @@ export default {
 
         window.location.href = "/reembolsos";
       } catch (error) {
-        console.error("Erro no login", error.response);
         this.message = "Erro ao fazer login. Verifique suas credenciais.";
       }
     },
