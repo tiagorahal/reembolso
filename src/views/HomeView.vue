@@ -1,7 +1,7 @@
 <template>
-  <div>
-    <h1>Bem-vindo ao Sistema de Reembolsos</h1>
-    <router-link v-if="!isLoggedIn" to="/login">Fazer Login</router-link>
+  <div class="container text-center mt-5">
+    <h1 class="display-4">Bem-vindo ao Sistema de Reembolsos</h1>
+    <router-link v-if="!isLoggedIn" to="/login" class="btn btn-primary mt-3">Fazer Login</router-link>
   </div>
 </template>
 

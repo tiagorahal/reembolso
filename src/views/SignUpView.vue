@@ -1,20 +1,28 @@
 <template>
-  <div class="signup-container">
-    <h1>Cadastro</h1>
-    <form @submit.prevent="register">
-      <label for="email">Email:</label>
-      <input type="email" v-model="email" required />
-      <p v-if="showEmailError" class="error">{{ emailError }}</p>
+  <div class="container d-flex justify-content-center align-items-center vh-100">
+    <div class="card shadow p-4" style="width: 400px;">
+      <h2 class="text-center">Cadastro</h2>
+      <form @submit.prevent="register">
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input v-model="email" @blur="validateEmail" type="email" class="form-control" placeholder="Digite seu email" required />
+          <p v-if="showEmailError" class="text-danger small">{{ emailError }}</p>
+        </div>
 
-      <label for="password">Senha:</label>
-      <input type="password" v-model="password" required />
+        <div class="mb-3">
+          <label class="form-label">Senha</label>
+          <input v-model="password" type="password" class="form-control" placeholder="Digite sua senha" required />
+        </div>
 
-      <label for="password_confirmation">Confirmar Senha:</label>
-      <input type="password" v-model="password_confirmation" required />
+        <div class="mb-3">
+          <label class="form-label">Confirmar Senha</label>
+          <input v-model="password_confirmation" type="password" class="form-control" placeholder="Confirme sua senha" required />
+        </div>
 
-      <button type="submit">Criar Conta</button>
-    </form>
-    <p v-if="message" class="message">{{ message }}</p>
+        <button type="submit" class="btn btn-success w-100">Criar Conta</button>
+      </form>
+      <p v-if="message" class="mt-3 text-center text-danger">{{ message }}</p>
+    </div>
   </div>
 </template>
 
@@ -69,10 +77,3 @@ export default {
   }
 };
 </script>
-
-<style>
-.error {
-  color: red;
-  font-size: 0.9em;
-}
-</style>

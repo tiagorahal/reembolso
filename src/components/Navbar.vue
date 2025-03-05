@@ -1,12 +1,26 @@
 <template>
-  <nav>
-    <ul>
-      <li><router-link to="/">Home</router-link></li>
-      <li v-if="!isLoggedIn"><router-link to="/login">Login</router-link></li>
-      <li v-if="!isLoggedIn"><router-link to="/signup">Cadastro</router-link></li>
-      <li v-if="isLoggedIn"><router-link to="/reembolsos">Reembolsos</router-link></li>
-      <li v-if="isLoggedIn"><button @click="logout">Logout</button></li>
-    </ul>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item" v-if="!isLoggedIn">
+            <router-link class="nav-link" to="/login">Login</router-link>
+          </li>
+          <li class="nav-item" v-if="!isLoggedIn">
+            <router-link class="nav-link" to="/signup">Cadastro</router-link>
+          </li>
+          <li class="nav-item" v-if="isLoggedIn">
+            <router-link class="nav-link" to="/reembolsos">Reembolsos</router-link>
+          </li>
+          <li class="nav-item" v-if="isLoggedIn">
+            <button class="btn btn-danger" @click="confirmLogout">Logout</button>
+          </li>
+        </ul>
+      </div>
+    </div>
   </nav>
 </template>
 
@@ -24,39 +38,17 @@ export default {
       isLoggedIn.value = !!Cookies.get("access-token");
     });
 
-    const logout = () => {
-      if (!window.confirm("Tem certeza que deseja sair?")) return;
-
-      Cookies.remove("access-token");
-      Cookies.remove("client");
-      Cookies.remove("uid");
-      isLoggedIn.value = false;
-      router.push("/login");
+    const confirmLogout = () => {
+      if (confirm("Reembolsos: Tem certeza que deseja sair?")) {
+        Cookies.remove("access-token");
+        Cookies.remove("client");
+        Cookies.remove("uid");
+        isLoggedIn.value = false;
+        router.push("/login");
+      }
     };
 
-    return { isLoggedIn, logout };
-  }
+    return { isLoggedIn, confirmLogout };
+  },
 };
 </script>
-
-<style scoped>
-nav {
-  background: #333;
-  padding: 1rem;
-}
-ul {
-  display: flex;
-  list-style: none;
-  gap: 1rem;
-}
-a, button {
-  color: white;
-  text-decoration: none;
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-button:hover {
-  text-decoration: underline;
-}
-</style>
