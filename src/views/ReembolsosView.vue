@@ -1,28 +1,138 @@
 <template>
   <div>
     <h1>Reembolsos</h1>
-    <button @click="getReembolsos">Carregar Reembolsos</button>
+
+    <h2>Adicionar Reembolso</h2>
+    <form @submit.prevent="createReembolso">
+      <input v-model="descricao" placeholder="Descrição" required />
+      <input v-model="valor" type="text" placeholder="Valor" @input="formatValue" required />
+      <input v-model="data" type="date" :max="today" required />
+      <button type="submit">Criar Reembolso</button>
+    </form>
+
     <ul>
       <li v-for="reembolso in reembolsos" :key="reembolso.id">
-        {{ reembolso.descricao }} - R$ {{ reembolso.valor }}
+        {{ reembolso.descricao }} - R$ {{ formatCurrency(reembolso.valor) }} ({{ formatDate(reembolso.data) }})
+        <button @click="deleteReembolso(reembolso.id)" class="delete-btn">❌</button>
       </li>
     </ul>
   </div>
 </template>
 
 <script>
+import { onMounted, ref } from "vue";
+import api from "../api";
+import Swal from "sweetalert2";
+
 export default {
-  data() {
-    return { reembolsos: [] };
-  },
-  methods: {
-    async getReembolsos() {
-      const response = await fetch("http://localhost:4000/reembolsos", {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
-      this.reembolsos = await response.json();
-    },
+  setup() {
+    const reembolsos = ref([]);
+    const descricao = ref("");
+    const valor = ref("");
+    const data = ref("");
+    const today = ref(new Date().toISOString().split("T")[0]);
+
+    const formatDate = (dateString) => {
+      const date = new Date(dateString);
+      if (isNaN(date)) return dateString;
+      return date.toLocaleDateString("pt-BR");
+    };
+
+    const formatCurrency = (value) => {
+      return parseFloat(value).toFixed(2).replace(".", ",");
+    };
+
+    const getReembolsos = async () => {
+      try {
+        const response = await api.get("/reembolsos");
+        reembolsos.value = response.data.sort((a, b) => new Date(a.data) - new Date(b.data));
+      } catch (error) {
+        console.error("Erro ao buscar reembolsos", error);
+      }
+    };
+
+    const createReembolso = async () => {
+      const selectedDate = new Date(data.value);
+      const currentDate = new Date();
+
+      if (selectedDate > currentDate) {
+        alert("Não é possível criar um reembolso para uma data futura!");
+        return;
+      }
+
+      try {
+        const response = await api.post("/reembolsos", {
+          reembolso: {
+            descricao: descricao.value,
+            valor: parseFloat(valor.value.replace(",", ".")),
+            data: data.value,
+          },
+        });
+
+        console.log("Reembolso criado:", response.data);
+
+        let index = reembolsos.value.findIndex(r => new Date(r.data) > new Date(response.data.data));
+        if (index === -1) {
+          reembolsos.value.push(response.data);
+        } else {
+          reembolsos.value.splice(index, 0, response.data);
+        }
+
+        descricao.value = "";
+        valor.value = "";
+        data.value = "";
+      } catch (error) {
+        console.error("Erro ao criar reembolso", error);
+      }
+    };
+
+    const deleteReembolso = async (id) => {
+      if (!window.confirm("Tem certeza que deseja excluir este reembolso?")) return;
+
+      try {
+        await api.delete(`/reembolsos/${id}`);
+        reembolsos.value = reembolsos.value.filter(reembolso => reembolso.id !== id);
+        console.log("Reembolso deletado com sucesso.");
+      } catch (error) {
+        console.error("Erro ao deletar reembolso", error);
+      }
+    };
+
+
+    const formatValue = () => {
+      valor.value = valor.value.replace(/[^0-9,]/g, "");
+    };
+
+    onMounted(getReembolsos);
+
+    return {
+      reembolsos,
+      descricao,
+      valor,
+      data,
+      today,
+      getReembolsos,
+      createReembolso,
+      deleteReembolso,
+      formatDate,
+      formatCurrency,
+      formatValue,
+    };
   },
 };
 </script>
+
+<style>
+.delete-btn {
+  margin-left: 10px;
+  color: red;
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-size: 1.2em;
+}
+
+.delete-btn:hover {
+  color: darkred;
+}
+</style>
