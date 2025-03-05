@@ -4,14 +4,27 @@
 
     <h2 class="mt-4">Adicionar Reembolso</h2>
     <form @submit.prevent="createReembolso" class="row g-3">
-      <div class="col-md-4">
+      <div class="col-md-3">
         <input v-model="descricao" class="form-control" placeholder="Descrição" required />
       </div>
       <div class="col-md-2">
-        <input v-model="valor" class="form-control" placeholder="Valor" required pattern="^\d+([.,]\d{1,2})?$" inputmode="decimal" />
+        <input 
+          v-model="valor" 
+          class="form-control" 
+          placeholder="Valor"
+          required 
+          @input="validateValor"
+        />
       </div>
       <div class="col-md-3">
         <input v-model="data" class="form-control" type="date" :max="today" required />
+      </div>
+      <div class="col-md-4">
+        <input
+          v-model="tagsInput"
+          class="form-control"
+          placeholder="Tags (separadas por vírgula)"
+        />
       </div>
       <div class="col-md-3">
         <button class="btn btn-success w-100" type="submit">Criar Reembolso</button>
@@ -23,50 +36,45 @@
           v-for="reembolso in reembolsos"
           :key="reembolso.id">
 
-        <span class="text-truncate flex-grow-1" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-          {{ reembolso.descricao }}
-        </span>
+        <div class="text-truncate flex-grow-1">
+          <span>{{ reembolso.descricao }}</span>
+          <div class="small text-muted">
+            <span v-for="tag in reembolso.tags" :key="tag.id" class="badge bg-primary me-1">
+              {{ tag.nome }}
+            </span>
+          </div>
+        </div>
 
         <div class="d-flex align-items-center ms-3" style="white-space: nowrap;">
-          <span class="fw-bold me-3">R$ {{ formatValor(reembolso.valor) }}</span>
+          <span class="fw-bold me-3">
+            R$ {{ parseFloat(reembolso.valor || 0).toFixed(2) }}
+          </span>
           <span>{{ formatDate(reembolso.data) }}</span>
         </div>
 
-        <button class="btn btn-primary btn-sm ms-3" @click="openEditModal(reembolso)">✏️</button>
-
-        <button class="btn btn-danger btn-sm ms-3" @click="deleteReembolso(reembolso.id)">❌</button>
+        <button class="btn btn-warning btn-sm me-2" @click="openEditModal(reembolso)">✏️</button>
+        <button class="btn btn-danger btn-sm" @click="deleteReembolso(reembolso.id)">❌</button>
       </li>
     </ul>
 
-    <div class="modal fade" id="editModal" tabindex="-1">
+
+    <!-- Modal for Editing -->
+    <div v-if="editModal" class="modal show d-block">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Editar Reembolso</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <button type="button" class="btn-close" @click="editModal = false"></button>
           </div>
           <div class="modal-body">
-            <form @submit.prevent="updateReembolso">
-              <div class="mb-3">
-                <label class="form-label">Descrição</label>
-                <input v-model="editReembolso.descricao" class="form-control" required />
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Valor</label>
-                <input v-model="editReembolso.valor"
-                       class="form-control"
-                       required
-                       pattern="^\d+([.,]\d{1,2})?$"
-                       inputmode="decimal"
-                       @input="formatInputValue"
-                />
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Data</label>
-                <input v-model="editReembolso.data" class="form-control" type="date" :max="today" required />
-              </div>
-              <button type="submit" class="btn btn-primary w-100">Salvar Alterações</button>
-            </form>
+            <input v-model="editReembolso.descricao" class="form-control mb-2" placeholder="Descrição" required />
+            <input v-model="editReembolso.valor" class="form-control mb-2" placeholder="Valor" @input="validateValor" required />
+            <input v-model="editReembolso.data" class="form-control mb-2" type="date" :max="today" required />
+            <input v-model="editReembolso.tags" class="form-control mb-2" placeholder="Tags (separadas por vírgula)" />
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" @click="editModal = false">Cancelar</button>
+            <button class="btn btn-primary" @click="updateReembolso">Salvar Alterações</button>
           </div>
         </div>
       </div>
@@ -78,7 +86,6 @@
 <script>
 import { onMounted, ref } from "vue";
 import api from "../api";
-import bootstrap from "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 export default {
   setup() {
@@ -86,33 +93,37 @@ export default {
     const descricao = ref("");
     const valor = ref("");
     const data = ref("");
+    const tagsInput = ref("");
     const today = ref(new Date().toISOString().split("T")[0]);
-
-    const editReembolso = ref({ id: null, descricao: "", valor: "", data: "" });
-    let editModal;
-
-    onMounted(() => {
-      getReembolsos();
-      editModal = new bootstrap.Modal(document.getElementById("editModal"));
-    });
+    const editModal = ref(false);
+    const editReembolso = ref({});
 
     const formatDate = (dateString) => {
       const date = new Date(dateString);
-      if (isNaN(date)) return dateString;
-      return date.toLocaleDateString("pt-BR");
-    };
-
-    const formatValor = (val) => {
-      const num = parseFloat(val);
-      return isNaN(num) ? "0.00" : num.toFixed(2);
+      return isNaN(date) ? dateString : date.toLocaleDateString("pt-BR");
     };
 
     const getReembolsos = async () => {
       try {
         const response = await api.get("/reembolsos");
-        reembolsos.value = response.data.sort((a, b) => new Date(a.data) - new Date(b.data));
+        reembolsos.value = response.data.map(r => ({
+          ...r,
+          valor: parseFloat(r.valor || 0),
+          tags: r.tags || []
+        })).sort((a, b) => new Date(a.data) - new Date(b.data));
       } catch (error) {
         console.error("Erro ao buscar reembolsos", error);
+      }
+    };
+
+
+
+
+    const validateValor = () => {
+      valor.value = valor.value.replace(/[^0-9.,]/g, "");
+      const parts = valor.value.split(/[,.]/);
+      if (parts.length > 2) {
+        valor.value = parts[0] + "." + parts.slice(1).join("");
       }
     };
 
@@ -122,79 +133,64 @@ export default {
         return;
       }
 
-      try {
-        const formattedValue = parseFloat(valor.value.replace(",", ".")).toFixed(2);
+      const tagsArray = tagsInput.value
+        .split(",")
+        .map(tag => tag.trim())
+        .filter(tag => tag.length > 0);
 
+      try {
         const response = await api.post("/reembolsos", {
-          reembolso: { descricao: descricao.value, valor: formattedValue, data: data.value },
+          reembolso: {
+            descricao: descricao.value,
+            valor: parseFloat(valor.value),
+            data: data.value,
+            tag_ids: tagsArray,
+          },
         });
 
-        let index = reembolsos.value.findIndex(r => new Date(r.data) > new Date(response.data.data));
-        index === -1 ? reembolsos.value.push(response.data) : reembolsos.value.splice(index, 0, response.data);
+        reembolsos.value.push(response.data);
+        reembolsos.value.sort((a, b) => new Date(a.data) - new Date(b.data));
 
         descricao.value = "";
         valor.value = "";
         data.value = "";
+        tagsInput.value = "";
       } catch (error) {
         console.error("Erro ao criar reembolso", error);
       }
     };
 
-    const deleteReembolso = async (id) => {
-      if (!window.confirm("Reembolsos: Tem certeza que deseja excluir este reembolso?")) return;
-
-      try {
-        await api.delete(`/reembolsos/${id}`);
-        reembolsos.value = reembolsos.value.filter(r => r.id !== id);
-      } catch (error) {
-        console.error("Erro ao deletar reembolso", error);
-      }
-    };
-
     const openEditModal = (reembolso) => {
-      editReembolso.value = { ...reembolso };
-      editModal.show();
+      editReembolso.value = { 
+        ...reembolso, 
+        tags: reembolso.tags ? reembolso.tags.map(tag => tag.nome).join(", ") : "" 
+      };
+      editModal.value = true;
     };
+
 
     const updateReembolso = async () => {
-      try {
-        const formattedValue = parseFloat(editReembolso.value.valor.replace(",", ".")).toFixed(2);
+      const updatedTagsArray = editReembolso.value.tags
+        .split(",")
+        .map(tag => tag.trim())
+        .filter(tag => tag.length > 0);
 
-        const response = await api.put(`/reembolsos/${editReembolso.value.id}`, {
-          reembolso: { descricao: editReembolso.value.descricao, valor: formattedValue, data: editReembolso.value.data },
-        });
+      await api.put(`/reembolsos/${editReembolso.value.id}`, {
+        reembolso: {
+          descricao: editReembolso.value.descricao,
+          valor: parseFloat(editReembolso.value.valor),
+          data: editReembolso.value.data,
+          tag_ids: updatedTagsArray,
+        },
+      });
 
-        reembolsos.value = reembolsos.value.filter(r => r.id !== editReembolso.value.id);
-
-        let index = reembolsos.value.findIndex(r => new Date(r.data) > new Date(response.data.data));
-        index === -1 ? reembolsos.value.push(response.data) : reembolsos.value.splice(index, 0, response.data);
-
-        editModal.hide();
-      } catch (error) {
-        console.error("Erro ao atualizar reembolso", error);
-      }
+      editModal.value = false;
+      getReembolsos();
     };
 
-    const formatInputValue = () => {
-      editReembolso.value.valor = editReembolso.value.valor.replace(/[^0-9.,]/g, "");
-    };
+    onMounted(getReembolsos);
 
-    return {
-      reembolsos,
-      descricao,
-      valor,
-      data,
-      today,
-      getReembolsos,
-      createReembolso,
-      formatDate,
-      formatValor,
-      deleteReembolso,
-      editReembolso,
-      openEditModal,
-      updateReembolso,
-      formatInputValue,
-    };
+    return { reembolsos, descricao, valor, data, tagsInput, today, createReembolso, formatDate, validateValor, editModal, editReembolso, openEditModal, updateReembolso };
   },
 };
 </script>
