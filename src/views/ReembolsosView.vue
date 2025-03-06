@@ -116,8 +116,14 @@ export default {
       }
     };
 
-
-
+    const deleteReembolso = async (id) => {
+      try {
+        await api.delete(`/reembolsos/${id}`);
+        reembolsos.value = reembolsos.value.filter(reembolso => reembolso.id !== id);
+      } catch (error) {
+        console.error("Erro ao excluir reembolso", error);
+      }
+    };
 
     const validateValor = () => {
       valor.value = valor.value.replace(/[^0-9.,]/g, "");
@@ -196,7 +202,7 @@ export default {
 
     onMounted(getReembolsos);
 
-    return { reembolsos, descricao, valor, data, tagsInput, today, createReembolso, formatDate, validateValor, editModal, editReembolso, openEditModal, updateReembolso };
+    return { reembolsos, descricao, valor, data, tagsInput, today, createReembolso, formatDate, validateValor, editModal, editReembolso, openEditModal, updateReembolso ,deleteReembolso };
   },
 };
 </script>

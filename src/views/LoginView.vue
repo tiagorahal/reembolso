@@ -4,14 +4,29 @@
       <h2 class="text-center">Login</h2>
       <form @submit.prevent="login">
         <div class="mb-3">
-          <label class="form-label">Email</label>
-          <input v-model="email" @blur="validateEmail" type="email" class="form-control" placeholder="Digite seu email" required />
+          <label class="form-label" for="email">Email</label>
+          <input 
+            id="email" 
+            v-model="email" 
+            @blur="validateEmail" 
+            type="email" 
+            class="form-control" 
+            placeholder="Digite seu email" 
+            required 
+          />
           <p v-if="showEmailError" class="text-danger small">{{ emailError }}</p>
         </div>
 
         <div class="mb-3">
-          <label class="form-label">Senha</label>
-          <input v-model="password" type="password" class="form-control" placeholder="Digite sua senha" required />
+          <label class="form-label" for="password">Senha</label>
+          <input 
+            id="password" 
+            v-model="password" 
+            type="password" 
+            class="form-control" 
+            placeholder="Digite sua senha" 
+            required 
+          />
         </div>
 
         <button type="submit" class="btn btn-primary w-100">Entrar</button>
@@ -20,6 +35,7 @@
     </div>
   </div>
 </template>
+
 
 <script>
 import api from "../api";
