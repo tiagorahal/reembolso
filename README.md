@@ -108,7 +108,6 @@ VITE_API_URL=http://localhost:3000
 | `npm install`      | Install dependencies                      |
 | `npm run dev`      | Run local dev server                      |
 | `npm run build`    | Build for production                      |
-| `npm run lint`     | Lint & fix code issues                    |
 
 ---
 
